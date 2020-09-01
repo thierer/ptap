@@ -28,7 +28,8 @@
 #include <pc.h>
 #include <crt0.h>
 
-#define VERSION 0.37
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 37
 
 /* DAC Color Mask register, default: 0xff. palette_color = PELMASK & color_reg */
 #define PELMASK 0x03c6
@@ -254,7 +255,7 @@ void sleep_usecs(unsigned long usec)
     unsigned long maxdel;
     unsigned long byte;
 
-    ticks_left = ((float) usec * BASEFREQ / 1000000);
+    ticks_left = usec * BASEFREQ / 1000000;
     while (ticks_left)
     {
         outp(CTC_MODE,0x00);               /* latch counter */
@@ -407,7 +408,7 @@ int main(int argc, char **argv)
     struct tap_image tap;
     int ignore;
 
-    printf("\nptap - Commodore TAP file player v%.2f\n\n", VERSION);
+    printf("\nptap - Commodore TAP file player v%d.02d\n\n", VERSION_MAJOR, VERSION_MINOR);
 
     ignore = 0;
     lptnum = 1;
@@ -531,13 +532,13 @@ int main(int argc, char **argv)
         tapbyte = *buffer;
 
         if (tapbyte != 0x00)
-            half_wave_time = (0.5 * (tapbyte+0.5) * 1000000 / tap.frequency);
+            half_wave_time = (2*tapbyte + 1) * 1000000 / tap.frequency / 4;
         else if (tap.version == 0)
         {
             pause = ZERO;
             for (;(*(buffer+1) == 0) && ((buffer + 1) < buffer_end); buffer++)
                 pause += ZERO;
-            half_wave_time = (0.5 * (pause+0.5) * 1000000 / tap.frequency);
+            half_wave_time = (2*pause + 1) * 1000000 / tap.frequency / 4;
         }
         else if (tap.version == 1)
         {
@@ -549,7 +550,7 @@ int main(int argc, char **argv)
                 pause >>= 8;
                 pause += (*buffer << 16);
             }
-            half_wave_time = (0.5 * ((pause >> 3)+0.5) * 1000000 / tap.frequency);
+            half_wave_time = ((pause>>2) + 1) * 1000000 / tap.frequency / 4;
         }
 
 	outp(PELMASK, (flash++ << 4) | 0x0f);
