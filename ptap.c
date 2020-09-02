@@ -550,7 +550,7 @@ int main(int argc, char **argv)
                 pause >>= 8;
                 pause += (*buffer << 16);
             }
-            half_wave_time = ((pause>>2) + 1) * 1000000 / tap.frequency / 4;
+            half_wave_time = 2*((pause>>3) + 1) * 1000000 / tap.frequency / 4;
         }
 
 	outp(PELMASK, (flash++ << 4) | 0x0f);
