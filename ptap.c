@@ -532,13 +532,13 @@ int main(int argc, char **argv)
         tapbyte = *buffer;
 
         if (tapbyte != 0x00)
-            half_wave_time = (2*tapbyte + 1) * 1000000 / tap.frequency / 4;
+            half_wave_time = (tapbyte * 1000000 / tap.frequency + 1) / 2;
         else if (tap.version == 0)
         {
             pause = ZERO;
             for (;(*(buffer+1) == 0) && ((buffer + 1) < buffer_end); buffer++)
                 pause += ZERO;
-            half_wave_time = (2*pause + 1) * 1000000 / tap.frequency / 4;
+            half_wave_time = (pause * 1000000 / tap.frequency + 1) / 2;
         }
         else if (tap.version == 1)
         {
@@ -550,7 +550,7 @@ int main(int argc, char **argv)
                 pause >>= 8;
                 pause += (*buffer << 16);
             }
-            half_wave_time = 2*((pause>>3) + 1) * 1000000 / tap.frequency / 4;
+            half_wave_time = (pause * 1000000 / tap.frequency + 8) / 16;
         }
 
 	outp(PELMASK, (flash++ << 4) | 0x0f);
