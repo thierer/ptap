@@ -335,7 +335,7 @@ void *read_tap_data(FILE *fpin, struct tap_image *tap)
 
     /* read the TAP-file version */
     tap->version = freadbyte(fpin);
-    if ((tap->version < 0) || (tap->version > 1))
+    if ((tap->version < 0) || (tap->version > 2))
     {
         fprintf(stderr, "TAP Version not (yet) supported, sorry!\n");
         exit(6);
@@ -401,6 +401,7 @@ int main(int argc, char **argv)
     unsigned int tapbyte;
     unsigned long pause;
     unsigned long half_wave_time;
+    int half_wave_level;
     int lptnum;
     int i;
 
@@ -526,6 +527,7 @@ int main(int argc, char **argv)
 
     disable();
     sleep_init();
+    half_wave_level = 0;
     /* the actual playback loop */
     for (buffer = tap.data; buffer < buffer_end; buffer++)
     {
@@ -540,7 +542,7 @@ int main(int argc, char **argv)
                 pause += ZERO;
             half_wave_time = (pause * 1000000 / tap.frequency + 1) / 2;
         }
-        else if (tap.version == 1)
+        else if (tap.version > 1)
         {
             if ((buffer + 3) >= buffer_end) break;
             pause = 0;
@@ -554,11 +556,21 @@ int main(int argc, char **argv)
         }
 
 	outp(PELMASK, (flash++ << 4) | 0x0f);
-        toggle_output(1);
-        sleep_usecs(half_wave_time);
-        toggle_output(0);
-        sleep_usecs(half_wave_time);
-        toggle_output(1);
+        if (tap.version != 2)
+        {
+            toggle_output(1);
+            sleep_usecs(half_wave_time);
+            toggle_output(0);
+            sleep_usecs(half_wave_time);
+            toggle_output(1);
+        }
+        else
+        {
+            half_wave_level ^= 1;
+            half_wave_time *= 2;
+            toggle_output(half_wave_level);
+            sleep_usecs(half_wave_time);
+        }
     }
     set_border_black();
     outp(PELMASK, 0xff);
