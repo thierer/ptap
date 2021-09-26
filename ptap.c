@@ -30,6 +30,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 37
+#define VERSION_PATCH 2
 
 /* DAC Color Mask register, default: 0xff. palette_color = PELMASK & color_reg */
 #define PELMASK 0x03c6
@@ -409,7 +410,7 @@ int main(int argc, char **argv)
     struct tap_image tap;
     int ignore;
 
-    printf("\nptap - Commodore TAP file player v%d.02d\n\n", VERSION_MAJOR, VERSION_MINOR);
+    printf("\nptap - Commodore TAP file player v%d.%02d.%d\n\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 
     ignore = 0;
     lptnum = 1;
