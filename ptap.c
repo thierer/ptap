@@ -248,7 +248,7 @@ void sleep_init()
 }
 
 
-void sleep_usecs(unsigned long usec)
+void sleep_usecs(unsigned long long usec)
 {
     /* wait usec microseconds */
     unsigned long timer_now;
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
     char tap_file_name[MAXSTRLEN];  /* TAP file filename */
     unsigned char *buffer, *buffer_end;
     unsigned int tapbyte;
-    unsigned long pause;
+    unsigned long long pause;
     unsigned long half_wave_time;
     int half_wave_level;
     int lptnum;
@@ -536,7 +536,10 @@ int main(int argc, char **argv)
         tapbyte = *buffer;
 
         if (tapbyte != 0x00)
-            half_wave_time = (tapbyte * 1000000 / tap.frequency + 1) / 2;
+            if (tap.version != 2)
+                half_wave_time = (tapbyte * 1000000 / tap.frequency + 1) / 2;
+            else
+                half_wave_time = (tapbyte * 1000000 / tap.frequency + 1);
         else if (tap.version == 0)
         {
             pause = ZERO;
@@ -544,7 +547,7 @@ int main(int argc, char **argv)
                 pause += ZERO;
             half_wave_time = (pause * 1000000 / tap.frequency + 1) / 2;
         }
-        else if (tap.version > 1)
+        else if (tap.version > 0)
         {
             if ((buffer + 3) >= buffer_end) break;
             pause = 0;
@@ -554,7 +557,10 @@ int main(int argc, char **argv)
                 pause >>= 8;
                 pause += (*buffer << 16);
             }
-            half_wave_time = (pause * 1000000 / tap.frequency + 8) / 16;
+            if (tap.version != 2)
+                half_wave_time = (pause * 1000000 / tap.frequency + 8) / 16;
+            else
+                half_wave_time = (pause * 1000000 / tap.frequency + 8) / 8;
         }
 
 	outp(PELMASK, (flash++ << 4) | 0x0f);
@@ -569,7 +575,6 @@ int main(int argc, char **argv)
         else
         {
             half_wave_level ^= 1;
-            half_wave_time *= 2;
             toggle_output(half_wave_level);
             sleep_usecs(half_wave_time);
         }
